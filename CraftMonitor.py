@@ -4,16 +4,27 @@ import requests
 import json
 from python_mcstatus import JavaStatusResponse, statusJava
 import minestat
+import sqlite3
 
-BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.GO1cEQ.caW0Ubzl7LtsRkctIDlXzi2V21Rp7FVMIfj3k0"
+#SQL Database
+con = sqlite3.connect("guilds")
+cur = con.cursor()
+
+cur.execute('''CREATE TABLE IF NOT EXISTS guilds
+                    (guild integer PRIMARY KEY, channel integer)''')
+
+cur.execute('''INSERT OR IGNORE INTO guilds VALUES
+                    ('768549569075085341', '847240244637859850')''')
+
+con.commit()
+
+for row in cur.execute("SELECT * FROM guilds"):
+    print(row)
+
+BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.Gxcd0A.U6n4tXTKskzD6cqA6D1_XVYm4GMyhJGeynSM1M"
 CHANNEL_ID = 847240244637859850
 
 bot = commands.Bot(command_prefix="*", intents=discord.Intents.all())
-
-'''@bot.command()
-async def hello(ctx):
-    await ctx.send("Hello!")
-'''
 
 host = '64.121.202.133'
 port = 25567
