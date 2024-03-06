@@ -3,8 +3,9 @@ import discord
 import requests
 import json
 from python_mcstatus import JavaStatusResponse, statusJava
+import minestat
 
-BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.GTlGIp.Td-KhZyH9PlAy4iN9rntfQTi0tFA4TRHXxCqFs"
+BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.GO1cEQ.caW0Ubzl7LtsRkctIDlXzi2V21Rp7FVMIfj3k0"
 CHANNEL_ID = 847240244637859850
 
 bot = commands.Bot(command_prefix="*", intents=discord.Intents.all())
@@ -12,23 +13,16 @@ bot = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 '''@bot.command()
 async def hello(ctx):
     await ctx.send("Hello!")
-
-@bot.command()
-async def add(ctx, x, y):
-    sum = int(x)+int(y)
-    await ctx.send(f"{x} + {y} = {sum}")
-
-@bot.command()
-async def add(ctx, *arr):
-    sum = 0
-    for i in arr:
-        sum += int(i)
-    await ctx.send(f"Result: {sum}")'''
+'''
 
 host = '64.121.202.133'
 port = 25567
 query = True 
 
+
+#Initialize data when bot starts
+ms = minestat.MineStat('64.121.202.133', 25567)
+latency = ms.latency
 r = requests.get("https://api.mcstatus.io/v2/status/java/64.121.202.133:25567")
 data = json.loads(r.text)
 status = data['online']
@@ -50,21 +44,24 @@ async def embed(status,host,players_online):
         status = str("OFFLINE")
     
     embed=discord.Embed(title=f"Status for {host}",
-                        description=f"Server Status: **{status}** \n{players_online} players online",
-                        color = 0xFF5733
+                        description=f"Server Status: __**{status}**__ \nPlayers online: {players_online}\n Latency: {latency}ms",
+                        color=discord.Color.dark_green()
                             )
     channel = bot.get_channel(CHANNEL_ID)
     global message
     message = await channel.send(embed = embed)
 
-
+#Bot commands
 @bot.command()
 async def players(ctx):
     await ctx.send(f"Player list: {player_names}")
 
+#Update data for bot to display
 #JavaStatusResponse = statusJava(host, port, query)
 @tasks.loop(minutes=.5)
 async def check_data():
+    ms = minestat.MineStat('64.121.202.133', 25567)
+    latency = ms.latency
     r = requests.get("https://api.mcstatus.io/v2/status/java/64.121.202.133:25567")
     data = json.loads(r.text)
     status = data['online']
@@ -85,20 +82,19 @@ async def check_data():
     else:
         status = str("OFFLINE")
 
-    print(status)
-
     new_embed=discord.Embed(title=f"Status for {host}",
-                    description=f"Server Status: **{status}** \n{players_online} players online",
-                    color = 0xFF5733
-                        )
+                        description=f"Server Status: __**{status}**__ \nPlayers online: {players_online}\n Latency: {latency}ms",
+                        color=discord.Color.dark_green()
+                            )
     await message.edit(embed=new_embed)
 
 
-
+#Runs when bot initalizes
 @bot.event
 async def on_ready():
     await embed(status,host,players_online)
     check_data.start()
 
+#Continually runs the bot
 bot.run(BOT_TOKEN) #looping function 
 
