@@ -13,15 +13,9 @@ cur = con.cursor()
 cur.execute('''CREATE TABLE IF NOT EXISTS guilds
                     (guild integer PRIMARY KEY, channel integer)''')
 
-cur.execute('''INSERT OR IGNORE INTO guilds VALUES
-                    ('768549569075085341', '847240244637859850')''')
-
 con.commit()
 
-for row in cur.execute("SELECT * FROM guilds"):
-    print(row)
-
-BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.Gxcd0A.U6n4tXTKskzD6cqA6D1_XVYm4GMyhJGeynSM1M"
+BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.GuENSi.esqlgg7q3OISr6bcLedmwUq1aKyqT0s83A8ifI"
 CHANNEL_ID = 847240244637859850
 
 bot = commands.Bot(command_prefix="*", intents=discord.Intents.all())
@@ -101,6 +95,12 @@ async def check_data():
 
 
 #Runs when bot initalizes
+@bot.event
+async def on_guild_join(ctx):
+    cur.execute(f'''INSERT OR IGNORE INTO guilds VALUES
+                    ({ctx.guild.id}, '847240244637859850')''')
+    con.commit()
+
 @bot.event
 async def on_ready():
     await embed(status,host,players_online)
