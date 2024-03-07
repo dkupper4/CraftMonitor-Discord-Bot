@@ -7,22 +7,20 @@ import minestat
 import sqlite3
 
 #SQL Database
-con = sqlite3.connect("guilds")
+con = sqlite3.connect("guilds.db")
 cur = con.cursor()
 
 cur.execute('''CREATE TABLE IF NOT EXISTS guilds
-                    (guild integer PRIMARY KEY, channel integer)''')
+                    (guildId integer PRIMARY KEY, channelId integer, messageId integer, serverId text)''')
 
 con.commit()
 
-BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.GuENSi.esqlgg7q3OISr6bcLedmwUq1aKyqT0s83A8ifI"
+BOT_TOKEN = "MTIxNDcwNjA4MTg2MzgzMTYyNA.GnLF0j.tRQC4OGF_1ppLdvwAMDHRIDZ_Z7Gheo2834Y8o"
 CHANNEL_ID = 847240244637859850
 
 bot = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 
-host = '64.121.202.133'
-port = 25567
-query = True 
+global status
 
 
 #Initialize data when bot starts
@@ -31,6 +29,7 @@ latency = ms.latency
 r = requests.get("https://api.mcstatus.io/v2/status/java/64.121.202.133:25567")
 data = json.loads(r.text)
 status = data['online']
+print(status)
 host = data['host']
 if status == True:
     players_online = data['players']['online']
@@ -42,19 +41,23 @@ else:
     players_online = 0
     player_names = "None"
 
-async def embed(status,host,players_online):
-    if status == True:
-        status = str("ONLINE")
-    else:
-        status = str("OFFLINE")
-    
+if status == True:
+    status = str("ONLINE")
+else:
+    status = str("OFFLINE")
+
+@bot.command()
+async def serverstatus(ctx):
     embed=discord.Embed(title=f"Status for {host}",
                         description=f"Server Status: __**{status}**__ \nPlayers online: {players_online}\n Latency: {latency}ms",
                         color=discord.Color.dark_green()
                             )
-    channel = bot.get_channel(CHANNEL_ID)
+    
+    channel_id = await get_channelId(ctx.guild.id)
+    channel = ctx.guild.get_channel(channel_id)
     global message
     message = await channel.send(embed = embed)
+
 
 #Bot commands
 @bot.command()
@@ -63,6 +66,7 @@ async def players(ctx):
 
 #Update data for bot to display
 #JavaStatusResponse = statusJava(host, port, query)
+
 @tasks.loop(minutes=.5)
 async def check_data():
     ms = minestat.MineStat('64.121.202.133', 25567)
@@ -96,15 +100,23 @@ async def check_data():
 
 #Runs when bot initalizes
 @bot.event
-async def on_guild_join(ctx):
-    cur.execute(f'''INSERT OR IGNORE INTO guilds VALUES
-                    ({ctx.guild.id}, '847240244637859850')''')
+async def on_guild_join(guild):
+    guild_id = guild.id
+    channel = guild.system_channel
+    channel_id = channel.id
+
+    cur.execute(f"INSERT INTO guilds (guildId, channelId) VALUES ('{guild_id}', '{channel_id}')")
     con.commit()
 
 @bot.event
 async def on_ready():
-    await embed(status,host,players_online)
-    check_data.start()
+    print("Bot is online")
+
+async def get_channelId(guildId):
+    cur.execute(f'SELECT channelId FROM guilds WHERE guildId = ?', (guildId,))
+    result = cur.fetchone()
+
+    return result[0] if result else None
 
 #Continually runs the bot
 bot.run(BOT_TOKEN) #looping function 

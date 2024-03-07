@@ -1,0 +1,16 @@
+sqlite Database:
+-   stores guildId, channelId, messageId, and mcserverId
+    -   guildId - holds the server ID (integer)
+    -   channelId - holds the ID of the channel in which the bot operates
+    -   messageId - holds the ID of the embed so the bought can return to and edit it based off of server
+    -   mcserverId - holds the server ID that is inputed by the user
+
+All columns, one row per server so the data can be retrieved and manipulated as needed
+
+
+Commands:
+1. configure - Allows user to configure the bot 
+2. set_channel - Allows user to configure bot to a specific channel id within a guild 
+3. server_status - Fetches data for server and displays in an embed
+    -   Update the data in time intervals(X) and edit the embed to reflect the updates after this function is called
+    -   will first check that the bot has been configured for the particular server 
